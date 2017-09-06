@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.speech.RecognizerIntent;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -44,6 +45,8 @@ import android.widget.Toast;
 
 import com.example.android.common.logger.Log;
 
+import java.util.ArrayList;
+
 /**
  * This fragment controls Bluetooth to communicate with other devices.
  */
@@ -55,6 +58,7 @@ public class BluetoothChatFragment extends Fragment {
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
     private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
     private static final int REQUEST_ENABLE_BT = 3;
+    private static final int RESULT_SPEECH = 4;
 
     // Layout Views
     private ListView mConversationView;
@@ -351,6 +355,15 @@ public class BluetoothChatFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                     getActivity().finish();
                 }
+                break;
+            case RESULT_SPEECH:
+                if (resultCode == Activity.RESULT_OK && null != data) {
+                    ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    Toast.makeText(getActivity(), text.get(0), Toast.LENGTH_SHORT).show();
+                    sendMessage(text.get(0));
+                }
+                break;
+
         }
     }
 
@@ -378,6 +391,10 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.voice_recognition: {
+                launchVoiceRecognitionIntent();
+                return true;
+            }
             case R.id.secure_connect_scan: {
                 // Launch the DeviceListActivity to see devices and do scan
                 Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
@@ -397,6 +414,12 @@ public class BluetoothChatFragment extends Fragment {
             }
         }
         return false;
+    }
+
+    private void launchVoiceRecognitionIntent(){
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "it-IT");
+        startActivityForResult(intent, RESULT_SPEECH);
     }
 
 }
